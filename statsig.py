@@ -15,7 +15,8 @@ u_factor = np.sqrt(1+1.96*np.sqrt(2)/np.sqrt(n-1))-1
 
 #print data.dtype.names
 
-print "Method_1", "Method_2", "RMSE_1", "RMSE_2", "RMSE_1-RMSE_2", "Composite Error", "Same/Different" 
+print "%-15s %-15s %-10s %-10s %-10s %-10s   %s" % \
+("Method_1", "Method_2", "RMSE_1", "RMSE_2", "RMSE_1-RMSE_2", "Composite Error", "Same/Different")
 
 for i,name_i in enumerate(data.dtype.names):
     if i == 0: continue
@@ -36,5 +37,6 @@ for i,name_i in enumerate(data.dtype.names):
             comp_error = np.sqrt(upper**2 + lower**2 - 2.0*r_ij*upper*lower)
             if abs(rmse_i - rmse_j) > comp_error: significance = "different"
             if abs(rmse_i - rmse_j) < comp_error: significance = "same"
-            print name_i,name_j,rmse_i,rmse_j,rmse_i - rmse_j,comp_error,significance
+            print "%-15s %-15s %10.4f %10.4f %10.4f %10.4f           %s" % \
+            (name_i,name_j,rmse_i,rmse_j,rmse_i - rmse_j,comp_error,significance)
  
