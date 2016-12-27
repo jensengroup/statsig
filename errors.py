@@ -7,7 +7,7 @@ http://proteinsandwavefunctions.blogspot.ch/2016/11/which-method-is-more-accurat
 Comparing two methods
 
 If errorX is some measure of the error, RMSE, MAE, etc, and errorA>errorB then
-the difference is statistically significant only if 
+the difference is statistically significant only if
 
 errorA - errorB > L2A+U2B - 2rABLAUB
 
@@ -45,7 +45,6 @@ errorB in the remaining case.
 
 def rmse(X, Y):
     """
-
     Root-mean-square error
 
     This only works for N >= 8.6832, otherwise the lower error will be
@@ -59,13 +58,12 @@ def rmse(X, Y):
     rmse -- Root-mean-square error between X and Y
     le -- Lower error on the RMSE value
     ue -- Upper error on the RMSE value
-
     """
 
     N, = X.shape
 
     if N < 9:
-        print "Not enough data points"
+        print "Not enough data points. Only {} data points given".format(N)
         return
 
     diff = X - Y
@@ -83,9 +81,16 @@ def rmse(X, Y):
 
 def mae(X, Y):
     """
-
     mean absolute error (MAE)
 
+    Parameters:
+    X -- One dimensional Numpy array of floats
+    Y -- One dimensional Numpy array of floats
+
+    Returns:
+    mae -- Mean-absolute error between X and Y
+    le -- Lower error on the MAE value
+    ue -- Upper error on the MAE value
     """
 
     mae = np.abs(X - Y)
@@ -102,9 +107,15 @@ def mae(X, Y):
 
 def me(X, Y):
     """
-
     mean error (ME)
 
+    Parameters:
+    X -- One dimensional Numpy array of floats
+    Y -- One dimensional Numpy array of floats
+
+    Returns:
+    mae -- Mean error between X and Y
+    e   -- Upper and Lower error on the ME
     """
 
     me = X - Y
