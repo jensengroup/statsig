@@ -1,4 +1,3 @@
-# usage "python statsig.py xxx.csv"
 
 import errors as e
 
@@ -62,8 +61,27 @@ for i in xrange(nm):
         print ps.format(m_i, m_j, rmse_i, rmse_j, rmse_i-rmse_j, comp_error, significance)
 
 
+# Create x-axis
+x = range(len(methods))
+
+# Errorbar (upper and lower)
 asymmetric_error = [lower_error, upper_error]
-fig, ax0 = plt.subplots(sharex=True)
-ax0.errorbar(range(len(methods)), rmse, yerr=asymmetric_error, fmt='o')
+
+# Add errorbar for RMSE
+plt.errorbar(x, rmse, yerr=asymmetric_error, fmt='o')
+
+# change x-axis to method names and rotate the ticks 30 degrees
+plt.xticks(x, methods, rotation=30)
+
+# Pad margins so that markers don't get clipped by the axes
+plt.margins(0.2)
+
+# Tweak spacing to prevent clipping of tick-labels
+plt.subplots_adjust(bottom=0.15)
+
+# Add grid to plot
+plt.grid(True)
+
+# Save plot to PNG format
 plt.savefig('error_plot.png')
 
