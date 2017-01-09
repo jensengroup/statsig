@@ -7,6 +7,9 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+if len(sys.argv) < 2:
+    exit("usage: python example.py example_input.csv")
+
 filename = sys.argv[1]
 f = open(filename, "r")
 data = np.genfromtxt(f, delimiter=',', names=True)
@@ -33,6 +36,7 @@ for method in methods:
 
 print "Method_A   Method_B      RMSE_A   RMSE_B   A-B      Comp Err   same?"
 ps = "{:10s} "*2 +  "{:8.3f} "*4 + "     {:}"
+
 
 for i in xrange(nm):
     for j in xrange(i+1, nm):

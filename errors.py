@@ -63,7 +63,7 @@ def rmse(X, Y):
     N, = X.shape
 
     if N < 9:
-        print "Not enough data points. Only {} data points given".format(N)
+        print "Not enough points. Only {} points given, at least 9 is required".format(N)
         return
 
     diff = X - Y
