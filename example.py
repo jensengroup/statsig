@@ -83,5 +83,5 @@ plt.subplots_adjust(bottom=0.15)
 plt.grid(True)
 
 # Save plot to PNG format
-plt.savefig('error_plot.png')
+plt.savefig('example_plot.png')
 
