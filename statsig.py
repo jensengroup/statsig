@@ -1,42 +1,244 @@
-# usage "python statsig.py xxx.csv"
-
-import sys
 import numpy as np
 
-filename = sys.argv[1]
-file = open(filename, "r")
+def rmse(X, Y):
+    """
+    Root-Mean-Square Error
 
-data = np.genfromtxt(file, delimiter=',', names=True)
+    Lower Error = RMSE \left( 1- \sqrt{ 1- \frac{1.96\sqrt{2}}{\sqrt{N-1}} }  \right )
+    Upper Error = RMSE \left(    \sqrt{ 1+ \frac{1.96\sqrt{2}}{\sqrt{N-1}} } - 1 \right )
 
-ref = data['REF']
-n = len(ref)
-l_factor = 1-np.sqrt(1-1.96*np.sqrt(2)/np.sqrt(n-1))
-u_factor = np.sqrt(1+1.96*np.sqrt(2)/np.sqrt(n-1))-1
+    This only works for N >= 8.6832, otherwise the lower error will be
+    imaginary.
 
-#print data.dtype.names
+    Parameters:
+    X -- One dimensional Numpy array of floats
+    Y -- One dimensional Numpy array of floats
 
-print "%-15s %-15s %-10s %-10s %-10s %-10s   %s" % \
-("Method_1", "Method_2", "RMSE_1", "RMSE_2", "RMSE_1-RMSE_2", "Composite Error", "Same/Different")
+    Returns:
+    rmse -- Root-mean-square error between X and Y
+    le -- Lower error on the RMSE value
+    ue -- Upper error on the RMSE value
+    """
 
-for i,name_i in enumerate(data.dtype.names):
-    if i == 0: continue
-    method_i = data[name_i]
-    rmse_i = np.sqrt(np.mean((method_i-ref)**2))
-    for j,name_j in enumerate(data.dtype.names):
-        if j == 0: continue
-        method_j = data[name_j]
-        rmse_j = np.sqrt(np.mean((method_j-ref)**2))
-        if i < j:
-            r_ij = np.corrcoef(method_i,method_j)[0][1]
+    N, = X.shape
+
+    if N < 9:
+        print "Not enough points. {} datapoints given. At least 9 is required".format(N)
+        return
+
+    diff = X - Y
+    diff = diff**2
+    rmse = np.sqrt(diff.mean())
+
+    le = rmse * (1.0 - np.sqrt(1-1.96*np.sqrt(2.0)/np.sqrt(N-1)))
+    ue = rmse * (np.sqrt(1 + 1.96*np.sqrt(2.0)/np.sqrt(N-1))-1)
+
+    return rmse, le, ue
+
+
+def mae(X, Y):
+    """
+    Mean Absolute Error (MAE)
+
+    Lower Error =  MAE_X \left( 1- \sqrt{ 1- \frac{1.96\sqrt{2}}{\sqrt{N-1}} }  \right )
+    Upper Error =  MAE_X \left(  \sqrt{ 1+ \frac{1.96\sqrt{2}}{\sqrt{N-1}} }-1  \right )
+
+    Parameters:
+    X -- One dimensional Numpy array of floats
+    Y -- One dimensional Numpy array of floats
+
+    Returns:
+    mae -- Mean-absolute error between X and Y
+    le -- Lower error on the MAE value
+    ue -- Upper error on the MAE value
+    """
+
+    N, = X.shape
+
+    mae = np.abs(X - Y)
+    mae = mae.mean()
+
+    le =  mae * (1 - np.sqrt(1 - 1.96*np.sqrt(2)/np.sqrt(N-1) ) )
+    ue =  mae * (    np.sqrt(1 + 1.96*np.sqrt(2)/np.sqrt(N-1) ) -1 )
+
+    return mae, le, ue
+
+
+def me(X, Y):
+    """
+    mean error (ME)
+
+    L_X = U_X =  \frac{1.96 s_N}{\sqrt{N}}
+    where sN is the standard population deviation (e.g. STDEVP in Excel).
+
+    Parameters:
+    X -- One dimensional Numpy array of floats
+    Y -- One dimensional Numpy array of floats
+
+    Returns:
+    mae -- Mean error between X and Y
+    e   -- Upper and Lower error on the ME
+    """
+
+    N, = X.shape
+
+    error = X - Y
+    me = error.mean()
+
+    s_N = stdevp(error, me, N)
+    e = 1.96*s_N/np.sqrt(N)
+
+    return me, e
+
+
+def stdevp(X, X_hat, N):
+    """
+    Parameters:
+    X -- One dimensional Numpy array of floats
+    X_hat -- Float
+    N -- Integer
+
+    Returns:
+
+    Calculates standard deviation based on the entire population given as
+    arguments. The standard deviation is a measure of how widely values are
+    dispersed from the average value (the mean).
+    """
+    return np.sqrt(np.sum((X-X_hat)**2)/N)
+
+
+if __name__ == '__main__':
+
+    import sys
+    import numpy as np
+
+    import matplotlib.pyplot as plt
+
+    if len(sys.argv) < 2:
+        exit("usage: python example.py example_input.csv")
+
+    filename = sys.argv[1]
+    f = open(filename, "r")
+    data = np.genfromtxt(f, delimiter=',', names=True)
+    f.close()
+
+    ref = data['REF']
+    n = len(ref)
+
+    methods = data.dtype.names
+    methods = methods[1:]
+    nm = len(methods)
+
+    rmse_list = []
+    lower_error = []
+    upper_error = []
+
+    mae_list = []
+    mae_lower = []
+    mae_upper = []
+
+    me_list = []
+    me_lower = []
+    me_upper = []
+
+    for method in methods:
+        mdata = data[method]
+
+        # RMSE
+        mrmse, mle, mue = rmse(mdata, ref)
+        rmse_list.append(mrmse)
+        lower_error.append(mle)
+        upper_error.append(mue)
+
+        # MAD
+        mmae, maele, maeue = mae(mdata, ref)
+        mae_list.append(mmae)
+        mae_lower.append(maele)
+        mae_upper.append(maeue)
+
+        # ME
+        mme, mmee = me(mdata, ref)
+        me_list.append(mme)
+        me_lower.append(mmee)
+        me_upper.append(mmee)
+
+
+    print "Method_A   Method_B      RMSE_A   RMSE_B   RMSE_A-RMSE_B  Comp Err  same?"
+    ps = "{:10s} "*2 +  "{:8.3f} "*2 + "{:8.3f}" + "{:15.3f}" + "     {:}"
+
+    for i in xrange(nm):
+        for j in xrange(i+1, nm):
+
+            m_i = methods[i]
+            m_j = methods[j]
+
+            rmse_i = rmse_list[i]
+            rmse_j = rmse_list[j]
+
+            r_ij = np.corrcoef(data[m_i], data[m_j])[0][1]
+
             if rmse_i > rmse_j:
-               lower = rmse_i*l_factor
-               upper = rmse_j*u_factor
+                lower = lower_error[i]
+                upper = upper_error[j]
             else:
-               lower = rmse_j*l_factor
-               upper = rmse_i*u_factor
+                lower = lower_error[j]
+                upper = upper_error[i]
+
             comp_error = np.sqrt(upper**2 + lower**2 - 2.0*r_ij*upper*lower)
-            if abs(rmse_i - rmse_j) > comp_error: significance = "different"
-            if abs(rmse_i - rmse_j) < comp_error: significance = "same"
-            print "%-15s %-15s %10.4f %10.4f %10.4f %10.4f           %s" % \
-            (name_i,name_j,rmse_i,rmse_j,rmse_i - rmse_j,comp_error,significance)
- 
+            significance = abs(rmse_i - rmse_j) < comp_error
+
+            print ps.format(m_i, m_j, rmse_i, rmse_j, rmse_i-rmse_j, comp_error, significance)
+
+
+    # Create x-axis
+    x = range(len(methods))
+
+    # Errorbar (upper and lower)
+    asymmetric_error = [lower_error, upper_error]
+
+    # Add errorbar for RMSE
+    plt.errorbar(x, rmse_list, yerr=asymmetric_error, fmt='o')
+
+    # change x-axis to method names and rotate the ticks 30 degrees
+    plt.xticks(x, methods, rotation=30)
+
+    # Pad margins so that markers don't get clipped by the axes
+    plt.margins(0.2)
+
+    # Tweak spacing to prevent clipping of tick-labels
+    plt.subplots_adjust(bottom=0.15)
+
+    # Add grid to plot
+    plt.grid(True)
+
+    # Set plot title
+    plt.title('Root-mean-sqaure error')
+
+    # Save plot to PNG format
+    plt.savefig('example_rmsd.png')
+
+    # Clear figure
+    plt.clf()
+
+    # MAE plot
+    asymmetric_error = [mae_lower, mae_upper]
+    plt.errorbar(x, mae_list, yerr=asymmetric_error, fmt='o')
+    plt.xticks(x, methods, rotation=30)
+    plt.margins(0.2)
+    plt.subplots_adjust(bottom=0.15)
+    plt.grid(True)
+    plt.title('Mean Absolute Error')
+    plt.savefig('example_mae.png')
+
+    # Clear figure
+    plt.clf()
+
+    # ME plot
+    asymmetric_error = [me_lower, me_upper]
+    plt.errorbar(x, me_list, yerr=asymmetric_error, fmt='o')
+    plt.xticks(x, methods, rotation=30)
+    plt.margins(0.2)
+    plt.subplots_adjust(bottom=0.15)
+    plt.grid(True)
+    plt.title('Mean Error')
+    plt.savefig('example_me.png')
