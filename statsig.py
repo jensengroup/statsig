@@ -1,6 +1,4 @@
-
 import numpy as np
-
 
 def rmse(X, Y):
     """
@@ -22,7 +20,7 @@ def rmse(X, Y):
     N, = X.shape
 
     if N < 9:
-        print "Not enough points. Only {} points given, at least 9 is required".format(N)
+        print "Not enough points. {} datapoints given. At least 9 is required".format(N)
         return
 
     diff = X - Y
@@ -142,9 +140,8 @@ if __name__ == '__main__':
         # TODO
 
 
-    print "Method_A   Method_B      RMSE_A   RMSE_B   A-B      Comp Err   same?"
-    ps = "{:10s} "*2 +  "{:8.3f} "*4 + "     {:}"
-
+    print "Method_A   Method_B      RMSE_A   RMSE_B   RMSE_A-RMSE_B  Comp Err  same?"
+    ps = "{:10s} "*2 +  "{:8.3f} "*2 + "{:8.3f}" + "{:15.3f}" + "     {:}"
 
     for i in xrange(nm):
         for j in xrange(i+1, nm):
