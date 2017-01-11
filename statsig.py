@@ -2,7 +2,10 @@ import numpy as np
 
 def rmse(X, Y):
     """
-    Root-mean-square error
+    Root-Mean-Square Error
+
+    Lower Error = RMSE \left( 1- \sqrt{ 1- \frac{1.96\sqrt{2}}{\sqrt{N-1}} }  \right )
+    Upper Error = RMSE \left(    \sqrt{ 1+ \frac{1.96\sqrt{2}}{\sqrt{N-1}} } - 1 \right )
 
     This only works for N >= 8.6832, otherwise the lower error will be
     imaginary.
@@ -27,10 +30,7 @@ def rmse(X, Y):
     diff = diff**2
     rmse = np.sqrt(diff.mean())
 
-    # Lower = RMSE \left( 1- \sqrt{ 1- \frac{1.96\sqrt{2}}{\sqrt{N-1}} }  \right )
     le = rmse * (1.0 - np.sqrt(1-1.96*np.sqrt(2.0)/np.sqrt(N-1)))
-
-    # Upper =  RMSE \left(  \sqrt{ 1+ \frac{1.96\sqrt{2}}{\sqrt{N-1}} }-1  \right )
     ue = rmse * (np.sqrt(1 + 1.96*np.sqrt(2.0)/np.sqrt(N-1))-1)
 
     return rmse, le, ue
@@ -38,7 +38,10 @@ def rmse(X, Y):
 
 def mae(X, Y):
     """
-    mean absolute error (MAE)
+    Mean Absolute Error (MAE)
+
+    Lower Error =  MAE_X \left( 1- \sqrt{ 1- \frac{1.96\sqrt{2}}{\sqrt{N-1}} }  \right )
+    Upper Error =  MAE_X \left(  \sqrt{ 1+ \frac{1.96\sqrt{2}}{\sqrt{N-1}} }-1  \right )
 
     Parameters:
     X -- One dimensional Numpy array of floats
@@ -49,9 +52,6 @@ def mae(X, Y):
     le -- Lower error on the MAE value
     ue -- Upper error on the MAE value
     """
-
-    # L_X =  MAE_X \left( 1- \sqrt{ 1- \frac{1.96\sqrt{2}}{\sqrt{N-1}} }  \right )
-    # U_X =  MAE_X \left(  \sqrt{ 1+ \frac{1.96\sqrt{2}}{\sqrt{N-1}} }-1  \right )
 
     N, = X.shape
 
@@ -68,6 +68,9 @@ def me(X, Y):
     """
     mean error (ME)
 
+    L_X = U_X =  \frac{1.96 s_N}{\sqrt{N}}
+    where sN is the standard population deviation (e.g. STDEVP in Excel).
+
     Parameters:
     X -- One dimensional Numpy array of floats
     Y -- One dimensional Numpy array of floats
@@ -79,16 +82,29 @@ def me(X, Y):
 
     N, = X.shape
 
-    me = X - Y
-    me = me.mean()
+    error = X - Y
+    me = error.mean()
 
-    # TODO 
-    # L_X = U_X =  \frac{1.96 s_N}{\sqrt{N}}
-    # where sN is the standard population deviation (e.g. STDEVP in Excel).
-    e = 0
+    s_N = stdevp(error, me, N)
+    e = 1.96*s_N/np.sqrt(N)
 
     return me, e
 
+
+def stdevp(X, X_hat, N):
+    """
+    Parameters:
+    X -- One dimensional Numpy array of floats
+    X_hat -- Float
+    N -- Integer
+
+    Returns:
+
+    Calculates standard deviation based on the entire population given as
+    arguments. The standard deviation is a measure of how widely values are
+    dispersed from the average value (the mean).
+    """
+    return np.sqrt(np.sum((X-X_hat)**2)/N)
 
 
 if __name__ == '__main__':
@@ -121,6 +137,10 @@ if __name__ == '__main__':
     mae_lower = []
     mae_upper = []
 
+    me_list = []
+    me_lower = []
+    me_upper = []
+
     for method in methods:
         mdata = data[method]
 
@@ -137,7 +157,10 @@ if __name__ == '__main__':
         mae_upper.append(maeue)
 
         # ME
-        # TODO
+        mme, mmee = me(mdata, ref)
+        me_list.append(mme)
+        me_lower.append(mmee)
+        me_upper.append(mmee)
 
 
     print "Method_A   Method_B      RMSE_A   RMSE_B   RMSE_A-RMSE_B  Comp Err  same?"
@@ -188,6 +211,9 @@ if __name__ == '__main__':
     # Add grid to plot
     plt.grid(True)
 
+    # Set plot title
+    plt.title('Root-mean-sqaure error')
+
     # Save plot to PNG format
     plt.savefig('example_rmsd.png')
 
@@ -201,5 +227,18 @@ if __name__ == '__main__':
     plt.margins(0.2)
     plt.subplots_adjust(bottom=0.15)
     plt.grid(True)
+    plt.title('Mean Absolute Error')
     plt.savefig('example_mae.png')
 
+    # Clear figure
+    plt.clf()
+
+    # ME plot
+    asymmetric_error = [me_lower, me_upper]
+    plt.errorbar(x, me_list, yerr=asymmetric_error, fmt='o')
+    plt.xticks(x, methods, rotation=30)
+    plt.margins(0.2)
+    plt.subplots_adjust(bottom=0.15)
+    plt.grid(True)
+    plt.title('Mean Error')
+    plt.savefig('example_me.png')
