@@ -1,5 +1,8 @@
 import numpy as np
 
+check = "rmse"
+#check = "pearson"
+
 def correl(X,Y):
     N, = X.shape
 
@@ -147,8 +150,8 @@ if __name__ == '__main__':
     nm = len(methods)
 
     rmse_list = []
-    lower_error = []
-    upper_error = []
+    rmse_lower = []
+    rmse_upper = []
 
     mae_list = []
     mae_lower = []
@@ -168,8 +171,8 @@ if __name__ == '__main__':
         # RMSE
         mrmse, mle, mue = rmse(mdata, ref)
         rmse_list.append(mrmse)
-        lower_error.append(mle)
-        upper_error.append(mue)
+        rmse_lower.append(mle)
+        rmse_upper.append(mue)
 
         # MAD
         mmae, maele, maeue = mae(mdata, ref)
@@ -193,14 +196,24 @@ if __name__ == '__main__':
     print "Method_A   Method_B      RMSE_A   RMSE_B   RMSE_A-RMSE_B  Comp Err  same?"
     ps = "{:10s} "*2 +  "{:8.3f} "*2 + "{:8.3f}" + "{:15.3f}" + "     {:}"
 
+
+    if check == "pearson":
+        measure = r_list
+        upper_error = r_upper
+        lower_error = r_lower
+    else:
+        measure = rmse_list
+        upper_error = rmse_upper
+        lower_error = rmse_lower
+
     for i in xrange(nm):
         for j in xrange(i+1, nm):
 
             m_i = methods[i]
             m_j = methods[j]
 
-            rmse_i = rmse_list[i]
-            rmse_j = rmse_list[j]
+            rmse_i = measure[i]
+            rmse_j = measure[j]
 
             r_ij = np.corrcoef(data[m_i], data[m_j])[0][1]
 
@@ -234,16 +247,16 @@ if __name__ == '__main__':
     print methods[-1],"\\\\"
     print "\midrule"
 #   for i in xrange(nm-1):
-#       print '%.1f $\pm$ %.1f/%.1f &'%(rmse_list[i],lower_error[i],upper_error[i]),
-#   print '%.1f $\pm$ %.1f/%.1f'%(rmse_list[-1],lower_error[-1],upper_error[-1])
+#       print '%.1f $\pm$ %.1f/%.1f &'%(rmse_list[i],lower_error[i],rmse_upper[i]),
+#   print '%.1f $\pm$ %.1f/%.1f'%(rmse_list[-1],lower_error[-1],rmse_upper[-1])
     print "RMSE &",
     for i in xrange(nm-1):
         print '%.1f &'%(rmse_list[i]),
     print '%.1f \\\\'%(rmse_list[-1])
     print "95 \% conf &",
     for i in xrange(nm-1):
-        print '$\pm$ %.1f/%.1f &'%(upper_error[i],lower_error[i]),
-    print '$\pm$ %.1f/%.1f \\\\'%(upper_error[-1],lower_error[-1])
+        print '$\pm$ %.1f/%.1f &'%(rmse_upper[i],lower_error[i]),
+    print '$\pm$ %.1f/%.1f \\\\'%(rmse_upper[-1],lower_error[-1])
     print "ME &",
     for i in xrange(nm-1):
         print '%.1f $\pm$ %.1f &'%(me_list[i],me_upper[i]),
@@ -267,7 +280,7 @@ if __name__ == '__main__':
     x = range(len(methods))
 
     # Errorbar (upper and lower)
-    asymmetric_error = [lower_error, upper_error]
+    asymmetric_error = [rmse_lower, rmse_upper]
 
     # Add errorbar for RMSE
     plt.errorbar(x, rmse_list, yerr=asymmetric_error, fmt='o')
