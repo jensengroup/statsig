@@ -234,41 +234,26 @@ if __name__ == '__main__':
     print "\centering"
     print "\caption{}"
     print "\label{}"
-    centering = "\\begin{tabular}{l"
-    for i in range(nm):
-        centering += "c"
-    centering +="}"
-    print centering
+    print "\\begin{tabular}{l" + nm*"c" + "}"
     print "\midrule"
-
-    print "&",
-    for i in range(nm-1):
-        print methods[i],"&",
-    print methods[-1],"\\\\"
+    print "& " + " & ".join(methods) + "\\\\"
     print "\midrule"
 #   for i in xrange(nm-1):
 #       print '%.1f $\pm$ %.1f/%.1f &'%(rmse_list[i],lower_error[i],rmse_upper[i]),
 #   print '%.1f $\pm$ %.1f/%.1f'%(rmse_list[-1],lower_error[-1],rmse_upper[-1])
-    print "RMSE &",
-    for i in xrange(nm-1):
-        print '%.1f &'%(rmse_list[i]),
-    print '%.1f \\\\'%(rmse_list[-1])
-    print "95 \% conf &",
-    for i in xrange(nm-1):
-        print '$\pm$ %.1f/%.1f &'%(rmse_upper[i],lower_error[i]),
-    print '$\pm$ %.1f/%.1f \\\\'%(rmse_upper[-1],lower_error[-1])
-    print "ME &",
-    for i in xrange(nm-1):
-        print '%.1f $\pm$ %.1f &'%(me_list[i],me_upper[i]),
-    print '%.1f $\pm$ %.1f \\\\'%(me_list[-1],me_upper[-1])
-    print "$r$ &",
-    for i in xrange(nm-1):
-        print '%.2f &'%(r_list[i]),
-    print '%.2f \\\\'%(r_list[-1])
-    print "95 \% conf &",
-    for i in xrange(nm-1):
-        print '$\pm$ %.2f/%.2f &'%(r_upper[i],r_lower[i]),
-    print '$\pm$ %.2f/%.2f \\\\'%(r_upper[-1],r_lower[-1])
+    print "RMSE & " + " & ".join(format(x, "3.1f") for x in rmse_list) + "\\\\"
+
+    temp_list = [ i+"/"+j for i,j in zip([format(x, "3.1f") for x in rmse_upper],[format(x, "3.1f") for x in rmse_lower])]
+    print "95 \% conf & $\pm$ " + " & $\pm$ ".join(temp_list) + "\\\\"
+
+    temp_list = [ i+" $\pm$ "+j for i,j in zip([format(x, "3.1f") for x in me_list],[format(x, "3.1f") for x in me_upper])]
+    print "ME & " + " & ".join(temp_list) + "\\\\"  
+
+    print "$r$ & " + " & ".join(format(x, "3.2f") for x in r_list) + "\\\\"
+
+    temp_list = [ i+"/"+j for i,j in zip([format(x, "3.2f") for x in r_upper],[format(x, "3.2f") for x in r_lower])]
+    print "95 \% conf & $\pm$ " + " & $\pm$ ".join(temp_list) + "\\\\"
+
     print "\midrule"
     print "\end{tabular}"
     print "\end{table}"
