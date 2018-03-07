@@ -142,7 +142,10 @@ if __name__ == '__main__':
     data = np.genfromtxt(f, delimiter=',', names=True)
     f.close()
 
-    ref = data['REF']
+    try:
+        ref = data['REF']
+    except: 
+        ref = data['\xef\xbb\xbfREF']
     n = len(ref)
 
     methods = data.dtype.names
@@ -205,6 +208,9 @@ if __name__ == '__main__':
         measure = rmse_list
         upper_error = rmse_upper
         lower_error = rmse_lower
+        # measure = mae_list
+        # upper_error = mae_upper
+        # lower_error = mae_lower
 
     for i in xrange(nm):
         for j in xrange(i+1, nm):
